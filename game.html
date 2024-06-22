@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ascensión Celestial: Tarot del Zodiaco</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #area-juego > div {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        #botones-zodiaco, #botones-sol, #botones-luna {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #info-personaje, #info-enemigo {
+            display: flex;
+            justify-content: space-around;
+            text-align: left;
+        }
+        .info-casa, .info-carta {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        #historia {
+            font-style: italic;
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        #area-batalla {
+            display: none;
+        }
+        #poderes-jugador button {
+            display: block;
+            width: 100%;
+            margin: 5px 0;
+        }
+        .descripcion-signo {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="area-juego">
+        <h1>Ascensión Celestial: Tarot del Zodiaco</h1>
+        <div id="configuracion">
+            <h2>Selecciona tus Signos Astrológicos</h2>
+            <div>
+                <h3>Signo del Zodiaco</h3>
+                <div id="botones-zodiaco"></div>
+                <div id="descripcion-zodiaco" class="descripcion-signo"></div>
+            </div>
+            <div>
+                <h3>Signo Solar</h3>
+                <div id="botones-sol"></div>
+                <div id="descripcion-sol" class="descripcion-signo"></div>
+            </div>
+            <div>
+                <h3>Signo Lunar</h3>
+                <div id="botones-luna"></div>
+                <div id="descripcion-luna" class="descripcion-signo"></div>
+            </div>
+            <button id="btn-iniciar-juego" onclick="iniciarJuego()">Comenzar Aventura</button>
+        </div>
+        <div id="historia" style="display: none"></div>
+        <div id="juego" style="display: none">
+            <div id="info-personaje">
+                <div>
+                    <h3>Estadísticas del Personaje</h3>
+                    <p id="stats-jugador"></p>
+                </div>
+                <div>
+                    <h3>Poderes</h3>
+                    <div id="poderes-jugador"></div>
+                </div>
+            </div>
+            <div class="info-casa">
+                <h2>Casa Actual: <span id="casa-actual"></span></h2>
+                <p id="descripcion-casa"></p>
+            </div>
+            <button onclick="desafiarCasa()">Desafiar Casa</button>
+        </div>
+        <div id="seleccion-carta" style="display: none">
+            <h2>Selecciona una Nueva Carta del Tarot</h2>
+            <div id="opciones-carta"></div>
+        </div>
+        <div id="area-batalla" style="display: none">
+            <h2>¡Batalla contra la Casa <span id="nombre-casa-batalla"></span>!</h2>
+            <div id="info-enemigo">
+                <h3>Estadísticas de la Casa</h3>
+                <p id="stats-enemigo"></p>
+            </div>
+            <div id="log-batalla"></div>
+            <div id="acciones-batalla">
+                <h3>Tus Poderes</h3>
+                <div id="poderes-batalla"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const signosZodiacales = [
+            {
+                nombre: "Aries",
+                descripcion: "El Carnero - Valiente y enérgico",
+                poder: "Dominio del Fuego",
+                detalle: "Aries, el primer signo del zodiaco, representa el inicio, la energía pura y el coraje. Como un Aries, posees una chispa interior que enciende tu determinación y te impulsa a liderar. Tu naturaleza apasionada y tu valentía te convierten en un pionero natural, siempre listo para enfrentar nuevos desafíos."
+            },
+            {
+                nombre: "Tauro",
+                descripcion: "El Toro - Paciente y determinado",
+                poder: "Sintonía con la Tierra",
+                detalle: "Tauro, el segundo signo del zodiaco, simboliza la estabilidad, la perseverancia y la conexión con el mundo material. Como un Tauro, tienes una fuerza interior inquebrantable y una determinación que te permite superar cualquier obstáculo. Tu paciencia y tu capacidad para apreciar las cosas simples de la vida te dotan de una sabiduría terrenal única."
+            },
+            {
+                nombre: "Géminis",
+                descripcion: "Los Gemelos - Adaptable y comunicativo",
+                poder: "Manipulación de la Dualidad",
+                detalle: "Géminis, el tercer signo del zodiaco, representa la dualidad, la comunicación y la adaptabilidad. Como un Géminis, posees una mente ágil y versátil, capaz de procesar información rápidamente y adaptarte a diversas situaciones. Tu curiosidad innata y tu habilidad para ver múltiples perspectivas te convierten en un comunicador nato y un pensador innovador."
+            },
+            {
+                nombre: "Cáncer",
+                descripcion: "El Cangrejo - Intuitivo y protector",
+                poder: "Resonancia Emocional",
+                detalle: "Cáncer, el cuarto signo del zodiaco, simboliza la intuición, la protección y las emociones profundas. Como un Cáncer, tienes una conexión única con tu mundo interior y una gran capacidad para entender y sentir las emociones de los demás. Tu naturaleza protectora y tu intuición aguda te convierten en un guardián compasivo y un consejero sabio."
+            },
+            {
+                nombre: "Leo",
+                descripcion: "El León - Confiado y carismático",
+                poder: "Empoderamiento Solar",
+                detalle: "Leo, el quinto signo del zodiaco, representa la creatividad, el liderazgo y la autoexpresión. Como un Leo, irradias una confianza natural y un carisma magnético que atrae a los demás hacia ti. Tu generosidad de espíritu y tu capacidad para inspirar te convierten en un líder nato y un creador apasionado."
+            },
+            {
+                nombre: "Virgo",
+                descripcion: "La Doncella - Analítico y práctico",
+                poder: "Toque Sanador",
+                detalle: "Virgo, el sexto signo del zodiaco, simboliza el análisis, la perfección y el servicio. Como un Virgo, posees una mente aguda y analítica, capaz de ver los detalles que otros pasan por alto. Tu dedicación al mejoramiento y tu deseo de ser útil te convierten en un sanador natural y un solucionador de problemas eficiente."
+            },
+            {
+                nombre: "Libra",
+                descripcion: "La Balanza - Diplomático e idealista",
+                poder: "Restauración del Equilibrio",
+                detalle: "Libra, el séptimo signo del zodiaco, representa el equilibrio, la armonía y la justicia. Como un Libra, tienes un don natural para la diplomacia y la capacidad de ver múltiples lados de una situación. Tu búsqueda de la belleza y la armonía en todas las cosas te convierte en un pacificador y un creador de ambientes armoniosos."
+            },
+            {
+                nombre: "Escorpio",
+                descripcion: "El Escorpión - Apasionado y recursivo",
+                poder: "Manipulación de las Sombras",
+                detalle: "Escorpio, el octavo signo del zodiaco, simboliza la transformación, la intensidad y el poder oculto. Como un Escorpio, posees una intensidad emocional y una capacidad de penetrar en las profundidades de cualquier situación. Tu resiliencia y tu habilidad para renacer de las cenizas te convierten en un poderoso agente de cambio y transformación."
+            },
+            {
+                nombre: "Sagitario",
+                descripcion: "El Arquero - Optimista y honesto",
+                poder: "Visión Cósmica",
+                detalle: "Sagitario, el noveno signo del zodiaco, representa la búsqueda de la verdad, la aventura y la expansión. Como un Sagitario, tienes un espíritu libre y una visión optimista que te impulsa a explorar nuevos horizontes. Tu honestidad y tu capacidad para ver el panorama general te convierten en un buscador de la verdad y un inspirador de otros."
+            },
+            {
+                nombre: "Capricornio",
+                descripcion: "La Cabra - Ambicioso y responsable",
+                poder: "Fuerza de la Montaña",
+                detalle: "Capricornio, el décimo signo del zodiaco, simboliza la ambición, la responsabilidad y la estructura. Como un Capricornio, posees una determinación inquebrantable y una capacidad para escalar las montañas más altas de la vida. Tu paciencia y tu habilidad para planificar a largo plazo te convierten en un líder respetado y un constructor de legados duraderos."
+            },
+            {
+                nombre: "Acuario",
+                descripcion: "El Portador de Agua - Original y humanitario",
+                poder: "Proyección del Pensamiento",
+                detalle: "Acuario, el undécimo signo del zodiaco, representa la innovación, la originalidad y el progreso social. Como un Acuario, tienes una mente única y visionaria, capaz de concebir ideas revolucionarias. Tu deseo de mejorar la humanidad y tu capacidad para pensar fuera de lo convencional te convierten en un agente de cambio y un defensor de causas humanitarias."
+            },
+            {
+                nombre: "Piscis",
+                descripcion: "Los Peces - Imaginativo y sensible",
+                poder: "Corrientes Psíquicas",
+                detalle: "Piscis, el duodécimo y último signo del zodiaco, simboliza la compasión, la imaginación y la conexión espiritual. Como un Piscis, posees una sensibilidad profunda y una intuición aguda que te permiten navegar por las corrientes emocionales de la vida. Tu naturaleza compasiva y tu capacidad para disolver fronteras te convierten en un sanador espiritual y un artista inspirado."
+            }
+        ];
+
+        const cartasTarot = [
+            {
+                nombre: "El Loco",
+                descripcion: "Nuevos comienzos, inocencia, espontaneidad",
+                poder: "Salto de Fe",
+                stats: { espiritu: 3, carisma: 2, fuerza: 0, inteligencia: 0 },
+                mensaje: "El Loco te invita a abrazar lo desconocido con confianza y alegría. Su energía te impulsa a dar un salto de fe, liberándote de las ataduras del miedo y la duda. Con este poder, puedes enfrentar los desafíos con una mente abierta y un corazón valiente, encontrando oportunidades donde otros ven obstáculos."
+            },
+            {
+                nombre: "El Mago",
+                descripcion: "Manifestación, recursos, poder",
+                poder: "Manipulación Elemental",
+                stats: { fuerza: 2, inteligencia: 3, espiritu: 1, carisma: 1 },
+                mensaje: "El Mago te otorga el poder de manipular las energías elementales del universo. Con este don, puedes canalizar las fuerzas de la naturaleza para manifestar tus deseos y transformar tu realidad. La Manipulación Elemental te permite armonizar con el flujo cósmico, convirtiendo tus pensamientos en acciones poderosas."
+            },
+            {
+                nombre: "La Sacerdotisa",
+                descripcion: "Intuición, conocimiento sagrado, lo divino femenino",
+                poder: "Intuición",
+                stats: { inteligencia: 4, espiritu: 3, fuerza: 0, carisma: 0 },
+                mensaje: "La Sacerdotisa te bendice con el don de la Intuición profunda. Este poder te permite acceder a la sabiduría oculta y los misterios del universo. Con la Intuición agudizada, puedes percibir verdades más allá de lo visible, guiando tus pasos con una comprensión que trasciende el conocimiento mundano."
+            },
+            {
+                nombre: "La Emperatriz",
+                descripcion: "Feminidad, belleza, naturaleza",
+                poder: "Nutrición",
+                stats: { espiritu: 3, carisma: 4, fuerza: 0, inteligencia: 0 },
+                mensaje: "La Emperatriz te concede el poder de la Nutrición, una fuerza creativa y sustentadora. Con este don, puedes nutrir tus proyectos, relaciones y a ti mismo con amor incondicional. La Nutrición te permite cultivar abundancia en todas las áreas de tu vida, fomentando el crecimiento y la prosperidad."
+            },
+            {
+                nombre: "El Emperador",
+                descripcion: "Autoridad, establecimiento, estructura",
+                poder: "Mando",
+                stats: { fuerza: 3, carisma: 3, inteligencia: 1, espiritu: 0 },
+                mensaje: "El Emperador te inviste con el poder del Mando. Esta habilidad te permite establecer orden en el caos y liderar con autoridad y sabiduría. Con el Mando, puedes crear estructuras sólidas en tu vida y en la de los demás, inspirando respeto y obediencia natural. Este poder te ayuda a manifestar tu visión con determinación y eficacia."
+            },
+            {
+                nombre: "El Sumo Sacerdote",
+                descripcion: "Sabiduría espiritual, creencias religiosas, conformidad",
+                poder: "Guía Divina",
+                stats: { espiritu: 4, inteligencia: 2, fuerza: 0, carisma: 1 },
+                mensaje: "El Sumo Sacerdote te bendice con el poder de la Guía Divina. Este don te conecta con la sabiduría universal y las verdades espirituales más profundas. La Guía Divina te permite navegar por los misterios de la existencia, ofreciendo consuelo y dirección tanto a ti como a los que te rodean. Con este poder, te conviertes en un puente entre lo terrenal y lo divino."
+            },
+            {
+                nombre: "Los Enamorados",
+                descripcion: "Amor, armonía, relaciones, elecciones",
+                poder: "Unidad",
+                stats: { carisma: 4, espiritu: 2, fuerza: 1, inteligencia: 0 },
+                mensaje: "Los Enamorados te otorgan el poder de la Unidad. Este don te permite armonizar fuerzas opuestas y crear conexiones profundas. Con la Unidad, puedes superar divisiones, sanar relaciones y tomar decisiones que integran tu mente, corazón y espíritu. Este poder te guía hacia el amor verdadero en todas sus formas."
+            },
+            {
+                nombre: "El Carro",
+                descripcion: "Control, fuerza de voluntad, éxito, acción",
+                poder: "Voluntad",
+                stats: { fuerza: 4, espiritu: 2, inteligencia: 1, carisma: 0 },
+                mensaje: "El Carro te confiere el poder de la Voluntad inquebrantable. Con este don, puedes superar cualquier obstáculo y dirigir tu vida con determinación imparable. La Voluntad te permite mantener el control en situaciones caóticas y avanzar hacia tus metas con confianza y propósito. Este poder te convierte en el conductor de tu propio destino."
+            },
+            {
+                nombre: "La Fuerza",
+                descripcion: "Coraje, persuasión, influencia, compasión",
+                poder: "Fuerza Interior",
+                stats: { fuerza: 5, espiritu: 1, carisma: 1, inteligencia: 0 },
+                mensaje: "La Fuerza te bendice con el poder de la Fuerza Interior. Este don va más allá de la fuerza física, dotándote de un coraje y una resiliencia inagotables. Con la Fuerza Interior, puedes enfrentar tus miedos, dominar tus pasiones y ejercer una influencia poderosa pero compasiva. Este poder te permite conquistar no a través de la dominación, sino a través de la valentía y la empatía."
+            },
+            {
+                nombre: "El Ermitaño",
+                descripcion: "Búsqueda del alma, introspección, orientación",
+                poder: "Sabiduría",
+                stats: { inteligencia: 5, espiritu: 2, fuerza: 0, carisma: 0 },
+                mensaje: "El Ermitaño te ilumina con el poder de la Sabiduría. Este don te permite ver más allá de las ilusiones y comprender las verdades más profundas de la existencia. Con la Sabiduría, puedes encontrar claridad en la confusión y guía en la oscuridad. Este poder te convierte en un faro de conocimiento, capaz de iluminar no solo tu propio camino, sino también el de los demás."
+            },
+            {
+                nombre: "La Rueda de la Fortuna",
+                descripcion: "Buena suerte, karma, ciclos de vida",
+                poder: "Manipulación de la Suerte",
+                stats: { espiritu: 3, inteligencia: 3, fuerza: 1, carisma: 0 },
+                mensaje: "La Rueda de la Fortuna te otorga el fascinante poder de Manipulación de la Suerte. Con este don, puedes influir en los giros del destino y aprovechar las oportunidades que se te presentan. La Manipulación de la Suerte te permite navegar los ciclos de la vida con gracia, transformando los desafíos en oportunidades y maximizando tu buena fortuna."
+            },
+            {
+                nombre: "La Justicia",
+                descripcion: "Equidad, verdad, causa y efecto",
+                poder: "Balance Kármico",
+                stats: { inteligencia: 4, espiritu: 2, fuerza: 1, carisma: 0 },
+                mensaje: "La Justicia te inviste con el poder del Balance Kármico. Este don te permite percibir y manipular las energías de causa y efecto que gobiernan el universo. Con el Balance Kármico, puedes restaurar el equilibrio en situaciones injustas y tomar decisiones con una comprensión profunda de sus consecuencias. Este poder te guía hacia la verdad y la equidad en todas tus acciones."
+            },
+            {
+                nombre: "El Colgado",
+                descripcion: "Rendición, nueva perspectiva, iluminación",
+                poder: "Cambio de Perspectiva",
+                stats: { espiritu: 5, inteligencia: 2, fuerza: 0, carisma: 0 },
+                mensaje: "El Colgado te bendice con el poder del Cambio de Perspectiva. Este don te permite ver el mundo desde ángulos completamente nuevos, revelando verdades ocultas y soluciones inesperadas. Con el Cambio de Perspectiva, puedes transformar los obstáculos en oportunidades y encontrar iluminación en los momentos de aparente estancamiento. Este poder te enseña el valor de la rendición y la sabiduría que se encuentra en lo inesperado."
+            },
+            {
+                nombre: "La Muerte",
+                descripcion: "Finales, cambio, transformación",
+                poder: "Renacimiento",
+                stats: { fuerza: 3, espiritu: 3, inteligencia: 1, carisma: 0 },
+                mensaje: "La Muerte te otorga el poderoso don del Renacimiento. Este poder te permite abrazar los finales como nuevos comienzos, transformando cada aspecto de tu ser. Con el Renacimiento, puedes desprenderte de lo viejo y dar la bienvenida a lo nuevo con coraje y gracia. Este poder te guía a través de los ciclos de transformación, ayudándote a emerger renovado y fortalecido de cada desafío."
+            },
+            {
+                nombre: "La Templanza",
+                descripcion: "Equilibrio, moderación, paciencia",
+                poder: "Fusión Elemental",
+                stats: { espiritu: 3, inteligencia: 3, fuerza: 1, carisma: 0 },
+                mensaje: "La Templanza te bendice con el poder de la Fusión Elemental. Este don te permite armonizar energías aparentemente opuestas, creando equilibrio en medio del caos. Con la Fusión Elemental, puedes moderar los extremos en tu vida y en tu entorno, encontrando soluciones creativas a través de la combinación de diferentes elementos. Este poder te enseña la fuerza de la paciencia y la moderación."
+            },
+            {
+                nombre: "El Diablo",
+                descripcion: "Sombra del yo, apego, adicción",
+                poder: "Abrazo de la Sombra",
+                stats: { fuerza: 4, carisma: 2, inteligencia: 1, espiritu: 0 },
+                mensaje: "El Diablo te confiere el intrigante poder del Abrazo de la Sombra. Este don te permite reconocer y integrar los aspectos oscuros de tu ser, transformando tus debilidades en fortalezas. Con el Abrazo de la Sombra, puedes liberarte de apegos y adicciones nocivas, canalizando tu pasión y deseo de manera constructiva. Este poder te enseña que en la aceptación de tu totalidad yace tu verdadera libertad."
+            },
+            {
+                nombre: "La Torre",
+                descripcion: "Cambio repentino, agitación, revelación",
+                poder: "Manipulación del Caos",
+                stats: { fuerza: 3, inteligencia: 3, espiritu: 1, carisma: 0 },
+                mensaje: "La Torre te otorga el poder de la Manipulación del Caos. Este don te permite navegar y hasta influir en los momentos de cambio repentino y agitación. Con la Manipulación del Caos, puedes encontrar oportunidades en la destrucción y claridad en la confusión. Este poder te enseña que a veces es necesario que las estructuras viejas caigan para que surjan nuevas verdades y comienzos."
+            },
+            {
+                nombre: "La Estrella",
+                descripcion: "Esperanza, inspiración, generosidad",
+                poder: "Conexión Cósmica",
+                stats: { espiritu: 4, carisma: 2, inteligencia: 1, fuerza: 0 },
+                mensaje: "La Estrella te bendice con el poder de la Conexión Cósmica. Este don te conecta con la vasta red de energía universal, llenándote de esperanza e inspiración. Con la Conexión Cósmica, puedes acceder a la sabiduría de las estrellas y canalizar su luz sanadora. Este poder te recuerda que eres parte de algo mucho más grande, inspirándote a brillar con tu propia luz única."
+            },
+            {
+                nombre: "La Luna",
+                descripcion: "Ilusión, miedo, ansiedad, subconsciente",
+                poder: "Visión Lunar",
+                stats: { inteligencia: 3, espiritu: 3, carisma: 1, fuerza: 0 },
+                mensaje: "La Luna te otorga el misterioso poder de la Visión Lunar. Este don te permite ver a través de las ilusiones y navegar por las profundidades de tu subconsciente. Con la Visión Lunar, puedes enfrentar tus miedos más profundos y transformar la ansiedad en intuición. Este poder te enseña que en la oscuridad de lo desconocido yacen tus mayores tesoros y revelaciones."
+            },
+            {
+                nombre: "El Sol",
+                descripcion: "Positividad, diversión, calidez, éxito",
+                poder: "Aura Radiante",
+                stats: { carisma: 4, fuerza: 2, espiritu: 1, inteligencia: 0 },
+                mensaje: "El Sol te bendice con el poder del Aura Radiante. Este don te llena de una luz interior que irradia positividad, vitalidad y éxito. Con el Aura Radiante, puedes iluminar los caminos oscuros, inspirar a otros con tu calidez y atraer abundancia a tu vida. Este poder te recuerda que, al igual que el sol, tienes la capacidad de brillar y dar vida a todo lo que tocas."
+            },
+            {
+                nombre: "El Juicio",
+                descripcion: "Juicio, renacimiento, llamada interior",
+                poder: "Despertar del Alma",
+                stats: { espiritu: 4, inteligencia: 2, fuerza: 1, carisma: 0 },
+                mensaje: "El Juicio te confiere el poder del Despertar del Alma. Este don te permite escuchar y responder a tu llamada interior más profunda. Con el Despertar del Alma, puedes elevarte por encima de las limitaciones pasadas y renacer en una versión más auténtica de ti mismo. Este poder te guía hacia una comprensión más clara de tu propósito vital y te impulsa a actuar en consecuencia."
+            },
+            {
+                nombre: "El Mundo",
+                descripcion: "Finalización, logro, viaje",
+                poder: "Unidad Cósmica",
+                stats: { espiritu: 3, inteligencia: 3, fuerza: 1, carisma: 1 },
+                mensaje: "El Mundo te bendice con el poder de la Unidad Cósmica. Este don te permite percibir y armonizar con la interconexión de todas las cosas. Con la Unidad Cósmica, puedes completar ciclos importantes en tu vida, alcanzar logros significativos y emprender viajes transformadores. Este poder te recuerda que eres un microcosmos del universo entero, capaz de manifestar tu realidad más elevada."
+            }
+        ];
+
+        let statsJugador = {
+            fuerza: 1,
+            inteligencia: 1,
+            espiritu: 1,
+            carisma: 1
+        };
+        let poderesJugador = [];
+        let casaActual = 0;
+        let signosSeleccionados = {zodiaco: null, sol: null, luna: null};
+
+        function crearBotonesSigno() {
+            const contenedores = ["botones-zodiaco", "botones-sol", "botones-luna"];
+            contenedores.forEach(idContenedor => {
+                const contenedor = document.getElementById(idContenedor);
+                signosZodiacales.forEach(signo => {
+                    const boton = document.createElement("button");
+                    boton.textContent = signo.nombre;
+                    boton.onclick = () => seleccionarSigno(signo, idContenedor.split("-")[1]);
+                    contenedor.appendChild(boton);
+                });
+            });
+        }
+
+        function seleccionarSigno(signo, tipo) {
+            signosSeleccionados[tipo] = signo;
+            document.querySelectorAll(`#botones-${tipo} button`).forEach(btn => {
+                btn.style.backgroundColor = btn.textContent === signo.nombre ? "#4CAF50" : "";
+            });
+            mostrarDescripcionSigno(signo, tipo);
+        }
+
+        function mostrarDescripcionSigno(signo, tipo) {
+            let descripcion = `<h3>${signo.nombre}</h3><p>${signo.detalle}</p>`;
+            if (tipo === "sol") {
+                descripcion += "<p>Tu signo solar representa tu ego, tu identidad y tu propósito en la vida.</p>";
+            } else if (tipo === "luna") {
+                descripcion += "<p>Tu signo lunar representa tus emociones, tus instintos y tu mundo interior.</p>";
+            }
+            document.getElementById(`descripcion-${tipo}`).innerHTML = descripcion;
+        }
+
+        function iniciarJuego() {
+            if (!signosSeleccionados.zodiaco || !signosSeleccionados.sol || !signosSeleccionados.luna) {
+                alert("Por favor, selecciona todos tus signos antes de comenzar la aventura.");
+                return;
+            }
+            document.getElementById("configuracion").style.display = "none";
+            document.getElementById("historia").style.display = "block";
+            document.getElementById("historia").innerHTML = generarHistoria();
+            inicializarPoderesJugador();
+            inicializarStatsJugador();
+            document.getElementById("historia").innerHTML += '<button onclick="continuarJuego()">Continuar</button>';
+        }
+
+        function continuarJuego() {
+            document.getElementById("historia").style.display = "none";
+            document.getElementById("juego").style.display = "block";
+            actualizarEstadoJuego();
+        }
+
+        function generarHistoria() {
+            return `
+            <p>En el vasto tapiz cósmico, te encuentras en una encrucijada de energías celestiales. Tu signo zodiacal, ${signosSeleccionados.zodiaco.nombre}, arde con intensidad, revelando tu naturaleza ${signosSeleccionados.zodiaco.descripcion.toLowerCase()}. Te otorga el poder del ${signosSeleccionados.zodiaco.poder}, una fuerza que te guiará a través de los desafíos que se avecinan.</p>
+            <p>Tu signo solar, ${signosSeleccionados.sol.nombre}, brilla sobre tu ser esencial, iluminando tu camino con ${signosSeleccionados.sol.descripcion.toLowerCase()}. De él, extraes la fuerza del ${signosSeleccionados.sol.poder}, un faro en tiempos de oscuridad.</p>
+            <p>En lo más profundo, tu signo lunar, ${signosSeleccionados.luna.nombre}, gobierna las mareas de tus emociones, susurrando secretos de ${signosSeleccionados.luna.descripcion.toLowerCase()}. Te confiere el sutil arte del ${signosSeleccionados.luna.poder}, una herramienta para navegar por los reinos invisibles.</p>
+            <p>Mientras te enfrentas a las doce casas del zodiaco, recuerda: cada desafío pondrá a prueba no solo tu fuerza, sino tu esencia misma. El viaje que tienes por delante es de autodescubrimiento, crecimiento y transformación. Abraza la sabiduría de las estrellas, porque al comprender el cosmos, llegas a comprenderte a ti mismo.</p>
+        `;
+        }
+
+        function inicializarPoderesJugador() {
+            poderesJugador = [
+                signosSeleccionados.zodiaco.poder,
+                signosSeleccionados.sol.poder,
+                signosSeleccionados.luna.poder
+            ];
+        }
+
+        function inicializarStatsJugador() {
+            statsJugador = {
+                fuerza: 5 + Math.floor(Math.random() * 3),
+                inteligencia: 5 + Math.floor(Math.random() * 3),
+                espiritu: 5 + Math.floor(Math.random() * 3),
+                carisma: 5 + Math.floor(Math.random() * 3)
+            };
+        }
+
+        function actualizarEstadoJuego() {
+            const dataCasaActual = signosZodiacales[casaActual];
+            document.getElementById("casa-actual").textContent = dataCasaActual.nombre;
+            document.getElementById("descripcion-casa").textContent = dataCasaActual.detalle;
+
+            const statsJugadorDiv = document.getElementById("stats-jugador");
+            statsJugadorDiv.innerHTML = Object.entries(statsJugador)
+                .map(([stat, valor]) => `<div class="stat-item"><span class="stat-name">${stat.charAt(0).toUpperCase() + stat.slice(1)}:</span> <span class="stat-value">${valor}</span></div>`)
+                .join("");
+
+            const poderesDiv = document.getElementById("poderes-jugador");
+            poderesDiv.innerHTML = "";
+            poderesJugador.forEach(poder => {
+                const botonPoder = document.createElement("button");
+                botonPoder.textContent = poder;
+                botonPoder.onclick = () => mostrarDescripcionPoder(poder);
+                poderesDiv.appendChild(botonPoder);
+            });
+        }
+
+        function mostrarDescripcionPoder(poder) {
+            const cartaAsociada = cartasTarot.find(carta => carta.poder === poder);
+            if (cartaAsociada) {
+                const descripcion = `
+                    <h3>${cartaAsociada.nombre}</h3>
+                    <p>${cartaAsociada.descripcion}</p>
+                    <p>Poder: ${cartaAsociada.poder}</p>
+                    <p>${cartaAsociada.mensaje}</p>
+                    <p>Este poder te ayudará aumentando tus estadísticas de la siguiente manera:</p>
+                    <ul>
+                        ${Object.entries(cartaAsociada.stats).map(([stat, valor]) => `<li>${stat}: +${valor}</li>`).join("")}
+                    </ul>
+                `;
+                document.getElementById("descripcion-poder").innerHTML = descripcion;
+            } else {
+                document.getElementById("descripcion-poder").innerHTML = `<p>Poder: ${poder}</p><p>Este poder te otorga una ventaja única en tu viaje.</p>`;
+            }
+        }
+
+        function desafiarCasa() {
+            const statsEnemigo = generarStatsEnemigo();
+            document.getElementById("juego").style.display = "none";
+            document.getElementById("area-batalla").style.display = "block";
+            document.getElementById("nombre-casa-batalla").textContent = signosZodiacales[casaActual].nombre;
+            document.getElementById("stats-enemigo").innerHTML = Object.entries(statsEnemigo)
+                .map(([stat, valor]) => `${stat.charAt(0).toUpperCase() + stat.slice(1)}: ${valor}`)
+                .join("<br>");
+            document.getElementById("log-batalla").innerHTML = `¡La batalla contra la Casa de ${signosZodiacales[casaActual].nombre} ha comenzado!`;
+            mostrarPoderesBatalla();
+        }
+
+        function generarStatsEnemigo() {
+            const nivelDificultad = casaActual + 1;
+            return {
+                fuerza: Math.floor(Math.random() * 3) + nivelDificultad,
+                inteligencia: Math.floor(Math.random() * 3) + nivelDificultad,
+                espiritu: Math.floor(Math.random() * 3) + nivelDificultad,
+                carisma: Math.floor(Math.random() * 3) + nivelDificultad
+            };
+        }
+
+        function mostrarPoderesBatalla() {
+            const poderesBatalla = document.getElementById("poderes-batalla");
+            poderesBatalla.innerHTML = "";
+            poderesJugador.forEach(poder => {
+                const botonPoder = document.createElement("button");
+                botonPoder.textContent = poder;
+                botonPoder.onclick = () => usarPoderEnBatalla(poder);
+                poderesBatalla.appendChild(botonPoder);
+            });
+        }
+
+        function usarPoderEnBatalla(poder) {
+            const logBatalla = document.getElementById("log-batalla");
+            const danioJugador = calcularDanio(statsJugador);
+            const statsEnemigo = obtenerStatsEnemigo();
+            statsEnemigo.fuerza -= danioJugador;
+            logBatalla.innerHTML += `<br>Usaste ${poder}. Causaste ${danioJugador} de daño al enemigo.`;
+
+            if (statsEnemigo.fuerza <= 0) {
+                finalizarBatalla(true);
+            } else {
+                turnoEnemigo(statsEnemigo);
+            }
+        }
+
+        function obtenerStatsEnemigo() {
+            const statsEnemigoElement = document.getElementById("stats-enemigo");
+            const statsEnemigo = {};
+            statsEnemigoElement.innerHTML.split("<br>").forEach(stat => {
+                const [nombre, valor] = stat.split(": ");
+                statsEnemigo[nombre.toLowerCase()] = parseInt(valor);
+            });
+            return statsEnemigo;
+        }
+
+        function turnoEnemigo(statsEnemigo) {
+            const logBatalla = document.getElementById("log-batalla");
+            const danioEnemigo = calcularDanio(statsEnemigo);
+            statsJugador.fuerza -= danioEnemigo;
+            logBatalla.innerHTML += `<br>El enemigo ataca. Recibes ${danioEnemigo} de daño.`;
+
+            if (statsJugador.fuerza <= 0) {
+                finalizarBatalla(false);
+            } else {
+                actualizarEstadoJuego();
+            }
+        }
+
+        function calcularDanio(stats) {
+            return Math.floor(Math.random() * (stats.fuerza + stats.inteligencia));
+        }
+
+        function finalizarBatalla(victoria) {
+            const logBatalla = document.getElementById("log-batalla");
+            if (victoria) {
+                logBatalla.innerHTML += `<br><strong>¡Has vencido a la Casa de ${signosZodiacales[casaActual].nombre}!</strong>`;
+                casaActual++;
+                if (casaActual >= signosZodiacales.length) {
+                    logBatalla.innerHTML += `<br><strong>¡Felicidades! Has conquistado todas las Casas del Zodiaco. Tu viaje de autodescubrimiento ha llegado a su fin, pero tu leyenda perdurará por siempre en las estrellas.</strong>`;
+                    logBatalla.innerHTML += '<br><button onclick="reiniciarJuego()">Jugar de nuevo</button>';
+                } else {
+                    logBatalla.innerHTML += '<br><button onclick="mostrarSeleccionCarta()">Continuar</button>';
+                }
+            } else {
+                logBatalla.innerHTML += `<br><strong>Has sido derrotado por la Casa de ${signosZodiacales[casaActual].nombre}. Pero tu viaje no termina aquí. Reflexiona sobre tu experiencia y vuelve a intentarlo.</strong>`;
+                logBatalla.innerHTML += '<br><button onclick="volverAlJuego()">Continuar</button>';
+            }
+        }
+
+        function mostrarSeleccionCarta() {
+            document.getElementById("area-batalla").style.display = "none";
+            document.getElementById("seleccion-carta").style.display = "block";
+            const opcionesCarta = document.getElementById("opciones-carta");
+            opcionesCarta.innerHTML = "";
+
+            for (let i = 0; i < 3; i++) {
+                const carta = cartasTarot[Math.floor(Math.random() * cartasTarot.length)];
+                const divCarta = document.createElement("div");
+                divCarta.classList.add("info-carta");
+                divCarta.innerHTML = `
+                    <h3>${carta.nombre}</h3>
+                    <p>${carta.descripcion}</p>
+                    <p>Poder: ${carta.poder}</p>
+                    <p>${carta.mensaje}</p>
+                    <p>Mejora de Estadísticas: ${Object.entries(carta.stats).map(([stat, valor]) => `${stat}: +${valor}`).join(", ")}</p>
+                    <button onclick="seleccionarCarta(${cartasTarot.indexOf(carta)})">Elegir esta Arcana</button>
+                `;
+                opcionesCarta.appendChild(divCarta);
+            }
+        }
+
+        function volverAlJuego() {
+            document.getElementById("area-batalla").style.display = "none";
+            document.getElementById("juego").style.display = "block";
+            actualizarEstadoJuego();
+        }
+
+        function reiniciarJuego() {
+            casaActual = 0;
+            signosSeleccionados = {zodiaco: null, sol: null, luna: null};
+            statsJugador = {fuerza: 1, inteligencia: 1, espiritu: 1, carisma: 1};
+            poderesJugador = [];
+            document.getElementById("area-batalla").style.display = "none";
+            document.getElementById("configuracion").style.display = "block";
+            crearBotonesSigno();
+        }
+
+        function seleccionarCarta(indice) {
+            const carta = cartasTarot[indice];
+            poderesJugador.push(carta.poder);
+            for (const [stat, valor] of Object.entries(carta.stats)) {
+                statsJugador[stat] += valor;
+            }
+            document.getElementById("seleccion-carta").style.display = "none";
+            document.getElementById("juego").style.display = "block";
+            actualizarEstadoJuego();
+            alert(`Has abrazado la sabiduría de ${carta.nombre}. ${carta.mensaje}`);
+        }
+
+        crearBotonesSigno();
+    </script>
+</body>
+</html>
